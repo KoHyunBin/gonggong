@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- /gonggong/src/main/webapp/detail1.html -->
+<html>
+<head>
+<meta charset="UTF-8">
+<title>국회 상세 자료</title>
+</head>
+<script type="text/javascript"
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+</script>
+<script type="text/javascript">
+//encodeURI : 2바이트 코드 또는 특수문자를 유니코드 
+   let pageno = 1
+   const url = "http://apis.data.go.kr/9720000/searchservice/detail"
+   			+ "?serviceKey=u%2BFpA4hadZBtMCJqRnJq47dbnnHR9Ulymf6XLwUO2o5wKuogVoeo9j5SJxJ2YvDxBCW5t5RE%2BunW%2B7Te%2BPWdbA%3D%3D"
+   			+ "&pageno="+pageno
+   			+ "&displaylines=10"
+   			+ "&dbname=일반도서"
+   			+ "&option=" + encodeURI("발행년도,2000|발행년도,2010")
+   			+ "&search="
+   $(function(){
+      $("#btn").click(function(){
+    	  let k = $("#kind").val() //자료구분 복수개 x
+    	  let f = $("#find").val() //자료명
+    	  $.ajax(url+k+","+f,{
+    		  success : function(data) {
+    			  //data : xml 객체 루트노트(문서노드).
+    			  console.log(data)
+    			  //$(data).find("total") : jquery를 이용하여 태그 선택
+    			  //						루트노트부터 total 태그 선택
+    			  //total : total 태그의 내용을 정수형으로 저장
+    			  let total = parseInt($(data).find("total").text())
+    			  //isNaN : 숫자가 아니니? 숫자가 아니면 TRUE 숫자이면 FALSE
+    			  if(isNaN($(data).find("total").text())) {
+    				  document.querySelector("#result").innerHTML="검색 데이터 없음"
+    				  return 
+    			  }
+    			  //total 값이 존재하는경우 숫자로 존재한 경우
+				  let html = "<table><caption>전체조회건수:"+total+"</caption>"
+				  //$(data).find("recode") : recode 태그들. 배열로 리턴
+				  //						 recode 태그가 여러개임
+				  html += "<tr>"
+				  $(data).find("recode").each(function(){
+					  html += "<tr>"
+					  //$(this) : 현재 실행 중인 recode 태그 한개
+					  $(this).find("item").each(function(){
+						  //$(this).find("name").text() : 검색데이터의 카테고리이름
+						  html += "<th>"+$(this).find("name").text()+"</th>"
+					  })
+					  html += "</tr>"
+					  return false //each 반복을 빠짐. break 기능과 같다.
+				  })
+				  $(data).find("recode").each(function(){
+					  html += "<tr>"
+					  $(this).find("item").each(function(){
+						  html += "<td>"+$(this).find("value").text()+"</td>"
+					  })
+					  html += "</tr>"
+				  })
+				  $("#result").html(html+"</table>")
+    		  },
+    		  error : function(e){
+    			  alert("공공데이터 수신 오류 : " + e.status)
+    		  }
+    	  })
+      })
+   }) 
+</script>
+<body>
+	<select id="kind">
+		<option>자료명</option>
+		<option>저자</option>
+		<option>발행자</option>
+		<option>키워드</option>
+		<option>청구기호</option>
+	</select>
+	<input type="text" id="find" size="50">
+	<button id="btn">검색</button>
+	<hr>
+	<div id="result"></div>
+</body>
+</html>
